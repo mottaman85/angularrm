@@ -7,19 +7,20 @@ import { By } from "@angular/platform-browser"
 import { Component, ViewChild } from '@angular/core'
 
 @Component({
-    template: `<testeable [pa-model]="model"></first>`
+    template: `<testeable [pa-model]="model"></testeable>`
 })
 class TestComponent{
     
     constructor(public model: Model){}
-    
 
+    @ViewChild(TestableComponent)
+    testableComponent: TestableComponent;
 
 }
 
 describe("Define una bateria de pruebas", () =>{
 
-    let fixture:ComponentFixture<TestableComponent>;
+    let fixture:ComponentFixture<TestComponent>;
     let component: TestableComponent;
 
     let debugElement: DebugElement;
@@ -39,60 +40,37 @@ describe("Define una bateria de pruebas", () =>{
     beforeEach(async()=>{
         
         TestBed.configureTestingModule({
-            declarations: [TestableComponent],
+            declarations: [TestableComponent, TestComponent],
             providers: [
                 {provide: Model, useValue: mockRepository}
             ]
         })
 
         TestBed.compileComponents().then(()=>{
-            fixture = TestBed.createComponent(TestableComponent);
-            component = fixture.componentInstance;
-            debugElement = fixture.debugElement;
-            bindingElement = debugElement.query(By.css("span")).nativeElement;
-            divElement = debugElement.children[0].nativeElement;
+            fixture = TestBed.createComponent(TestComponent);
+            fixture.detectChanges();
+            component = fixture.componentInstance.testableComponent;
+            debugElement = fixture.debugElement.query(By.directive(TestableComponent));
+            //bindingElement = debugElement.query(By.css("span")).nativeElement;
+
         })        
-        
+
     });
 
-    it("Validación de filtros por categoria", () => {
-
+    it("Validar que se reciba un elemento model desde el padre", ()=>{
         component.category = "Chess";
         fixture.detectChanges();
-        expect(component.getProducts().length).toBe(1);
-        expect(bindingElement.textContent).toContain("1");
-
-        component.category = "Soccer";
-        fixture.detectChanges();
-        expect(component.getProducts().length).toBe(2);
-        expect(bindingElement.textContent).toContain("2");
-
-        component.category = "BaseBall";
-        fixture.detectChanges();
-        expect(component.getProducts().length).toBe(0);
-        expect(bindingElement.textContent).toContain("0");
-
-    });
-
-    it("Valida el movimiento del mouse sobre el div", ()=>{
-        expect(component.highlighted).toBeFalsy();
-        expect(divElement.classList.contains("bg-success")).toBeFalsy();
+        let products = mockRepository.getProducts()
+            .filter(p => p.category == component.category);
         
-        //MOUSE ENTER
-        debugElement.triggerEventHandler("mouseenter", new Event("mouseenter"));
-        fixture.detectChanges();
-        expect(component.highlighted).toBeTruthy();
-        expect(divElement.classList.contains("bg-success")).toBeTruthy();
+        let componentProducts = component.getProducts();
 
-        //MOUSE LEAVE
-        debugElement.triggerEventHandler("mouseleave", new Event("mouseleave"));
-        fixture.detectChanges();
-        expect(component.highlighted).toBeFalsy();
-        expect(divElement.classList.contains("bg-success")).toBeFalsy();
-        
+        for(let i=0; i<componentProducts.length; i++){
+            expect(componentProducts[i]).toEqual(products[i]);
+        }
 
-
-
+        expect(debugElement.query(By.css("span")).nativeElement.textContent)
+            .toContain(products.length)
 
     });
 

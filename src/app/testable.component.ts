@@ -7,15 +7,12 @@ import { Model } from './repository'
     templateUrl: "testable.html"
 })
 export class TestableComponent{
-
-    @Input("pa-model")
-    repository:Model;
-    
+        
     category:string = "soccer";
     highlighted:boolean = false;
 
     public getProducts(): Product[]{
-        return this.repository.getProducts()
+        return this.model.getProducts()
             .filter(p => p.category == this.category);
     }
 
@@ -25,4 +22,6 @@ export class TestableComponent{
         this.highlighted = type == "mouseenter";
     }
 
+    @Input("pa-model")
+    model:Model;
 }
